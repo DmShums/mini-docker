@@ -12,12 +12,17 @@
 
 #define STACK_SIZE (1024 * 1024)
 
-// Function to create a new PID namespace and run the child process
+///////// PID namespace /////////
+
 pid_t createPidNamespace(int (*child_func)(void*), void* arg = nullptr);
 
 // Function to wait for the child process to terminate
 void waitForChildProcess(pid_t child_pid);
 
-//  UTS namespace
+///////// UTS namespace /////////
+
+pid_t createUtsNamespace(int (*child_func)(void*), void* arg);
+
+
 
 #endif //MINI_DOCKER_PID_NAMESPACE_HPP
