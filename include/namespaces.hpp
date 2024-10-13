@@ -8,7 +8,9 @@
 #include <sched.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/mount.h>
 #include <cstdlib>
+#include <cstring>
 
 #define STACK_SIZE (1024 * 1024)
 
