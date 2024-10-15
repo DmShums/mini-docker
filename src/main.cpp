@@ -6,13 +6,6 @@
 
 #include "cgroups.hpp"
 
-unsigned long long getTotalSystemMemory()
-{
-    long pages = sysconf(_SC_AVPHYS_PAGES);
-    long page_size = sysconf(_SC_PAGE_SIZE);
-    return pages * page_size / (1024 * 1024);
-}
-
 int main(){
     std::string cgroupPath = "myCgroup";
     addCgroup("myCgroup");
@@ -20,15 +13,12 @@ int main(){
 
     setMemoryLimit(cgroupPath, "10M");
     setCpuLimit(cgroupPath, "50000", "100000");
+    setPidLimit(cgroupPath, 3);
 
     pid_t pid = fork();
     if (pid == 0) {
-        std::cout << "Hello restricted world!" << std::endl;
+        execlp("sh", "sh", nullptr);
 
-//        don't know why but shows to much memory(
-//        made process wait for input to be able to check manually if it appears in the /sys/fs/cgroup/myCgroup/cgroup.procs
-//        std::cout << "RAM:\t" << std::to_string(getTotalSystemMemory()) << "MB" << std::endl;
-        std::cin.ignore();
     } else {
         addProcessToCgroup(cgroupPath, pid);
 

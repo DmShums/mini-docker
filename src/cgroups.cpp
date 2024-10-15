@@ -50,7 +50,7 @@ void setCpuLimit(const std::string& cgroupName, const std::string& maxUsage, con
     cpuLimitFile.close();
 }
 
-void setPidLimit(const std::string& cgroupName, size_t limit){
+void setPidLimit(const std::string& cgroupName, const size_t& limit){
     std::ofstream  pidLimitFile(CGROUP_PATH + cgroupName + "/pids.max");
     if (!pidLimitFile) {
         std::cerr << "Failed to set PIDs limit" << std::endl;

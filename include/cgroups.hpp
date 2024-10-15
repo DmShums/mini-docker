@@ -15,6 +15,7 @@
 void addProcessToCgroup(const std::string& cgroupPath, pid_t pid);
 void setCpuLimit(const std::string& cgroupPath, const std::string& maxUsage, const std::string& period);
 void setMemoryLimit(const std::string& cgroupPath, const std::string& limit);
+void setPidLimit(const std::string& cgroupPath, const size_t& limit);
 void addCgroup(const std::string& cgroupName);
 void removeCgroup(const std::string& cgroupName);
 
