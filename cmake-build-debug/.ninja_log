@@ -1,0 +1,12 @@
+# ninja log v5
+1	307	1728978951727640599	CMakeFiles/mini_docker.dir/src/main.cpp.o	f71adf9aed1f55b8
+307	353	1728978951771639971	/home/yura/ucu/OS_OperationalSystems/mini-docker/bin/mini_docker	b4ceffe1e758ce11
+2	389	1728981227676007241	CMakeFiles/mini_docker.dir/src/cgroups.cpp.o	cfb9cc28611fb26e
+2	429	1728981227716006042	CMakeFiles/mini_docker.dir/src/main.cpp.o	4917cab85d698d09
+429	484	1728981227768004482	/home/yura/ucu/OS_OperationalSystems/mini-docker/bin/mini_docker	9d6c29417ea06996
+2	418	1728981419098137399	CMakeFiles/mini_docker.dir/src/main.cpp.o	4917cab85d698d09
+418	469	1728981419146135902	/home/yura/ucu/OS_OperationalSystems/mini-docker/bin/mini_docker	9d6c29417ea06996
+2	420	1728981605217658123	CMakeFiles/mini_docker.dir/src/main.cpp.o	4917cab85d698d09
+420	469	1728981605265658159	/home/yura/ucu/OS_OperationalSystems/mini-docker/bin/mini_docker	9d6c29417ea06996
+2	423	1728981670053596680	CMakeFiles/mini_docker.dir/src/main.cpp.o	4917cab85d698d09
+423	472	1728981670101596555	/home/yura/ucu/OS_OperationalSystems/mini-docker/bin/mini_docker	9d6c29417ea06996
