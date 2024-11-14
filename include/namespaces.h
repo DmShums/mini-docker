@@ -1,0 +1,10 @@
+#ifndef MINI_DOCKER_NAMESPACES_H
+#define MINI_DOCKER_NAMESPACES_H
+
+
+class Namespaces {
+
+};
+
+
+#endif //MINI_DOCKER_NAMESPACES_H

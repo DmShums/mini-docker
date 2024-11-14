@@ -1,0 +1,8 @@
+#ifndef MINI_DOCKER_CONTAINERCONFIG_H
+#define MINI_DOCKER_CONTAINERCONFIG_H
+
+class ContainerConfig{
+
+};
+
+#endif //MINI_DOCKER_CONTAINERCONFIG_H
