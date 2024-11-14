@@ -2,9 +2,12 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 #include "cgroup.h"
+#include <unistd.h>
+#include <cstring>
 
-CGroup::CGroup(const std::string& cgroupPath) {
+CGroup::CGroup(const std::string& name) {
 //    creates new CGroup with name cgroupPath and adds itself to the group
+    cgroupPath = name;
     std::string newCgroupPath = CGROUP_PATH + cgroupPath;
 
     if (mkdir(newCgroupPath.c_str(), 0755) != 0) {
@@ -20,13 +23,26 @@ CGroup::CGroup(const std::string& cgroupPath) {
 
 void CGroup::addController(const std::string& controller){
 //    adds controller to cgroup
-    std::ofstream controllersFile(CGROUP_PATH + cgroupPath + "/cgroup.subtree_controllers");
+    std::ofstream controllersFile(CGROUP_PATH + cgroupPath + "/cgroup.subtree_control");
     if (!controllersFile) {
-        std::cerr << "Failed to open cgroup.subtree_controllers. Check cgroup name" << std::endl;
+        std::cerr << "Failed to open cgroup.subtree_control. Check cgroup name" << std::endl;
         return;
     }
     controllersFile << ("+" + controller);
     controllersFile.close();
+}
+
+CGroup::~CGroup() {
+    std::ofstream procsFile(CGROUP_PATH + std::string() + "/cgroup.procs");
+    if (!procsFile) {
+        std::cerr << "Failed to open cgroup.procs" << std::endl;
+        return;
+    }
+    procsFile.close();
+
+    if(rmdir((CGROUP_PATH + cgroupPath).c_str()) != 0){
+        std::cerr << "Failed to remove cgroup. Errno: " << std::strerror(errno) << std::endl;
+    }
 }
 
 void CGroup::addProcess(pid_t pid) {

@@ -1,0 +1,10 @@
+{
+  "name" : "bash",
+  "bin" : "/bin/sh",
+  "args" : [],
+  "mount_points" : ["/tmp"],
+  "mem_hard_limit" : 200,
+  "mem_throttling_limit" : 180,
+  "swap_limit" : 50,
+  "pids_limit" : 20
+}

@@ -17,6 +17,7 @@ private:
 public:
     CGroup() = delete;
     CGroup(const std::string& cgroupPath);
+    ~CGroup();
 
     void addProcess(pid_t pid);
 

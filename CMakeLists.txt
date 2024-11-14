@@ -74,11 +74,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE include)
 
 #! Add external packages
 # options_parser requires boost::program_options library
-#find_package(Boost 1.71.0 COMPONENTS program_options system REQUIRED)
+#find_package(Boost 1.71.0 COMPONENTS REQUIRED Boost::property_tree)
 #target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
-#target_link_libraries(${PROJECT_NAME} Boost::program_options Boost::system)
+#target_link_libraries(${PROJECT_NAME} PRIVATE Boost::property_tree)
 
-target_link_libraries(${PROJECT_NAME}  PRIVATE readline)
+target_link_libraries(${PROJECT_NAME} PRIVATE readline)
 
 ##########################################################
 # Fixed CMakeLists.txt part
