@@ -5,9 +5,8 @@
 #include <unistd.h>
 #include <cstring>
 
-CGroup::CGroup(const std::string& name) {
+CGroup::CGroup(const std::string& name): cgroupPath(name) {
 //    creates new CGroup with name cgroupPath and adds itself to the group
-    cgroupPath = name;
     std::string newCgroupPath = CGROUP_PATH + cgroupPath;
 
     if (mkdir(newCgroupPath.c_str(), 0755) != 0) {

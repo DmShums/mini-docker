@@ -21,6 +21,8 @@ public:
     std::string name;
     std::vector<std::string> argv;
     std::vector<std::string> mntPoints;
+    std::vector<std::string> copyPoints;
+    std::string new_root;
     int mem_hard_limit, mem_throttling_limit, swap_limit, pids_limit;
 
     ContainerConfig() = delete;
@@ -29,7 +31,6 @@ public:
         boost::property_tree::read_json(path, pt);
 
         // parse argv
-        argv.emplace_back(pt.get<std::string>("bin"));
         for (const auto &item: pt.get_child("args")) {
             argv.push_back(item.second.data());
         }
@@ -42,8 +43,11 @@ public:
             name = argv[0];
         }
 
+        // parse new_root
+        new_root = pt.get<std::string>("new_root");
+
         // parse memory limitations
-        for (const auto& [argName, varRef] : optionalIntArguments) {
+        for (const auto& [argName, varRef]: optionalIntArguments) {
             auto res = pt.get_optional<int>(argName);
             varRef = res ? res.value() : NOT_SET;
         }
@@ -51,6 +55,11 @@ public:
         // parse mount points
         for (const auto &item: pt.get_child("mount_points")) {
             mntPoints.push_back(item.second.data());
+        }
+
+        // parse copy points
+        for (const auto &item: pt.get_child("copy_points")) {
+            copyPoints.push_back(item.second.data());
         }
     }
 };

@@ -1,8 +1,8 @@
 {
   "name" : "mini-docker",
-  "new_root" : "/home/hellcaster/Desktop/mini-docker/tmp",
-  "args" : ["/bin/sh"],
-  "mount_points" : ["/bin:/bin"],
+  "new_root" : "/home/hellcaster/Desktop/mini-docker/tmp3",
+  "args" : ["/files/hello"],
+  "mount_points" : ["./binaries:/files"],
   "copy_points": [],
   "mem_hard_limit" : 200,
   "mem_throttling_limit" : 180,
