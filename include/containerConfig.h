@@ -23,6 +23,7 @@ public:
     std::vector<std::string> mntPoints;
     std::vector<std::string> copyPoints;
     std::string new_root;
+    std::string hostname;
     int mem_hard_limit, mem_throttling_limit, swap_limit, pids_limit;
 
     ContainerConfig() = delete;
@@ -60,6 +61,14 @@ public:
         // parse copy points
         for (const auto &item: pt.get_child("copy_points")) {
             copyPoints.push_back(item.second.data());
+        }
+
+        // parse hostname if exists
+        auto hostname_res = pt.get_optional<std::string>("hostname");
+        if (hostname_res) {
+            hostname = hostname_res.value();
+        } else {
+            hostname = "";  // or some default value if you prefer
         }
     }
 };

@@ -19,6 +19,7 @@ private:
 
     int isolate_filesystem();
     void clear_filesystem();
+    int isolate_namespaces();
 
     std::vector<std::string> defaultMountPoints = {
         "/lib:/lib",

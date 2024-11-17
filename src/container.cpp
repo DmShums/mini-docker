@@ -27,7 +27,7 @@ Container::Container(const ContainerConfig& cfg): cfg(cfg), cgroup(cfg.name) {
 int Container::isolate_filesystem() {
     isolated_fs = 1;
     // Create a new mount namespace
-    if (unshare(CLONE_NEWNS) == -1) { // further we will add more flags
+    if (unshare(CLONE_NEWNS) == -1) {
         std::cerr << "Failed to create a new mount namespace" << std::endl;
         return 1;
     }
@@ -114,6 +114,23 @@ int Container::isolate_filesystem() {
     return 0;
 }
 
+int Container::isolate_namespaces() {
+    if (unshare(CLONE_NEWPID | CLONE_NEWIPC | CLONE_NEWUTS | CLONE_NEWNET) == -1) {
+        std::cerr << "Failed to unshare namespaces: " << strerror(errno) << std::endl;
+        return;
+    }
+
+    // hostname for UTS namespace
+    if (!cfg.hostname.empty()) {
+        if (sethostname(cfg.hostname.c_str(), cfg.hostname.size()) == -1) {
+            std::cerr << "Failed to set hostname: " << strerror(errno) << std::endl;
+            return;
+        }
+    }
+
+    return 0;
+}
+
 void Container::run() {
     pid_t pid = fork();
 
@@ -123,6 +140,11 @@ void Container::run() {
     }
 
     if (pid == 0) {
+        if (isolate_namespaces() != 0) {
+            std::cerr << "Failed to isolate namespaces" << std::endl;
+            return;
+        }
+        
         if (isolate_filesystem() != 0) {
             std::cerr << "Failed to isolate filesystem" << std::endl;
             clear_filesystem();
