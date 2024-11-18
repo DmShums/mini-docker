@@ -4,6 +4,7 @@
 #include "../include/containerConfig.h"
 #include "../include/container.h"
 #include "../include/docker.h"
+#include "../include/client.h"
 #include <iostream>
 #include <sstream>
 #include <iterator>
