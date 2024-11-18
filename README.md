@@ -5,7 +5,7 @@
   "new_root": "/home/hellcaster/Desktop/mini-docker/tmp", // were will be the storage of current container
   "args": ["/vault_source/hello1"], // args to start a program (used in execv)
   "mount_points": ["/home/hellcaster/Desktop/mini-docker/binaries:/vault_source"], // mount <from>:<to>
-  "copy_points": [""],
+  "copy_points": [],
   "mem_hard_limit": 200,
   "mem_throttling_limit": 180,
   "swap_limit": 50,
