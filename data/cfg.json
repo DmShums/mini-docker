@@ -1,6 +1,6 @@
 {
   "name" : "mini-docker",
-  "new_root" : "/home/hellcaster/Desktop/mini-docker/tmp",
+  "new_root" : "/home/yura/ucu/OS_OperationalSystems/mini-docker/tmp",
   "args" : ["/bin/sh"],
   "mount_points" : ["/bin:/bin"],
   "copy_points": [],
