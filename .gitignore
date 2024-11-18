@@ -484,3 +484,6 @@ MigrationBackup/
 .ionide/
 
 tmp*/
+.vscode/
+binaroies/
+data/

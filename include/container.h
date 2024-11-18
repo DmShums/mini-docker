@@ -41,6 +41,8 @@ public:
         }
         result += "\n\tpid:\t" + procPid;
         result += "\n\tnew root:\t" + cfg.new_root + "\n";
+
+        return result;
     }
 
     ~Container();
