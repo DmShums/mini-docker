@@ -13,8 +13,10 @@ private:
     std::vector<std::unique_ptr<Container>> containers;
     size_t listened_container = NO_LISTENED_CONTAINER;
 
+    bool checkIdx(size_t idx);
 public:
     void create(const ContainerConfig& cfg);
+    void remove(size_t idx);
     void run(size_t idx);
     void kill(size_t idx);
     void listen(size_t idx);
