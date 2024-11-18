@@ -48,7 +48,8 @@ void Docker::resume(size_t idx){
 
 void Docker::list(){
     for (size_t idx = 0; idx < containers.size(); idx++){
-        std::cout << "\tname:\t" << containers[idx]->getName() << "idx:\t" << idx << std::endl;
+        std::cout << "\tname:\t" << containers[idx]->getName() << std::endl
+            << "\tidx:\t" << idx << std::endl;
         std::cout << containers[idx]->info();
     }
 }

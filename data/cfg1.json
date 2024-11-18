@@ -1,5 +1,5 @@
 {
-  "name" : "mini-docker",
+  "name" : "mini-docker1",
   "new_root" : "/home/hellcaster/Desktop/mini-docker/tmp3",
   "args" : ["/files/hello"],
   "mount_points" : ["./binaries:/files"],

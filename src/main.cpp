@@ -3,6 +3,7 @@
 
 #include "../include/containerConfig.h"
 #include "../include/container.h"
+#include "../include/docker.h"
 #include <iostream>
 #include <sstream>
 #include <iterator>
@@ -29,7 +30,6 @@ int main(int argc, char* argv[]) {
 
         client.executeCommand(argv.size(), argv);
     }
-
     return 0;
 }
 
