@@ -117,14 +117,14 @@ int Container::isolate_filesystem() {
 int Container::isolate_namespaces() {
     if (unshare(CLONE_NEWPID | CLONE_NEWIPC | CLONE_NEWUTS | CLONE_NEWNET) == -1) {
         std::cerr << "Failed to unshare namespaces: " << strerror(errno) << std::endl;
-        return;
+        return -1;
     }
 
     // hostname for UTS namespace
     if (!cfg.hostname.empty()) {
         if (sethostname(cfg.hostname.c_str(), cfg.hostname.size()) == -1) {
             std::cerr << "Failed to set hostname: " << strerror(errno) << std::endl;
-            return;
+            return -1;
         }
     }
 

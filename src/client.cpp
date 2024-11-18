@@ -16,11 +16,12 @@ void Client::executeCommand(size_t argc, const std::vector<std::string>& argv) {
     try {
         if (cmd == "create") {
             if (argc < 2) {
-                std::cerr << "Usage: create <name>" << std::endl;
+                std::cerr << "Usage: create <config_path>" << std::endl;
                 return;
             }
-            ContainerConfig cfg;
-            cfg.name = argv[1];
+
+            std::string configPath = argv[1];
+            ContainerConfig cfg(configPath);
             docker.create(cfg);
         } else if (cmd == "list") {
             docker.list();
