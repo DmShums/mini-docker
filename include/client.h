@@ -5,6 +5,9 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+#include <iostream>
+#include <unordered_map>
+#include <sstream>
 
 #include "docker.h"
 

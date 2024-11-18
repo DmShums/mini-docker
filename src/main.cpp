@@ -4,15 +4,32 @@
 #include "../include/containerConfig.h"
 #include "../include/container.h"
 #include <iostream>
+#include <sstream>
+#include <iterator>
 
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::cout << "Usage: mini-docker <config_path>" << std::endl;
-        return 1;
+    Client client;
+    std::string command;
+
+    while (true) {
+        command = client.readCommand();
+
+        std::istringstream iss(command);
+        std::vector<std::string> argv((std::istream_iterator<std::string>(iss)), 
+                                      std::istream_iterator<std::string>());
+        if (argv.empty()) {
+            continue;
+        }
+
+        if (argv[0] == "exit") {
+            std::cout << "Exiting mini-docker client." << std::endl;
+            break;
+        }
+
+        client.executeCommand(argv.size(), argv);
     }
 
-    ContainerConfig cfg(argv[1]);
-    Container container(cfg);
-    container.run();
+    return 0;
 }
+
