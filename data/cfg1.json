@@ -1,12 +1,8 @@
 {
-  "name" : "mini-docker16",
-  "new_root" : "/home/hellcaster/Desktop/mini-docker/tmp12",
-  "args" : ["/files/hello"],
-  "mount_points" : ["./binaries:/files"],
+  "name" : "mini-docker-2",
+  "new_root" : "/home/yura/ucu/OS_OperationalSystems/mini-docker/tmp",
+  "args" : ["/bin/sh"],
   "copy_points": [],
-  "mem_hard_limit" : 200,
-  "mem_throttling_limit" : 180,
-  "swap_limit" : 50,
-  "pids_limit" : 20,
-  "image": "alpine-aarch64"
+  "mount_points" : [],
+  "image": "alpine"
 }

@@ -486,4 +486,4 @@ MigrationBackup/
 tmp*/
 .vscode/
 binaroies/
-data/
+data/cfg*.json

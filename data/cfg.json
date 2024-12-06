@@ -1,12 +1,7 @@
 {
   "name" : "mini-docker",
-  "new_root" : "/home/hellcaster/Desktop/mini-docker/tmp",
+  "new_root" : "/home/yura/ucu/OS_OperationalSystems/mini-docker/tmp",
   "args" : ["/bin/sh"],
   "copy_points": [],
-  "mount_points" : [],
-  "mem_hard_limit" : 200,
-  "mem_throttling_limit" : 180,
-  "swap_limit" : 50,
-  "pids_limit" : 20,
-  "image": "alpine-aarch64"
+  "mount_points" : ["/lib64:/lib64", "/lib:/lib", "/bin:/bin"]
 }

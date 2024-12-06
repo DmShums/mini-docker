@@ -2,7 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 
-#include "../include/container.h"
+#include "container.h"
 
 #include <filesystem>
 
@@ -49,8 +49,10 @@ int Container::isolate_filesystem() {
         return 1;
     }
 
-    std::string imagePath = "./images/" + cfg.image + ".tar.gz";
-    std::system(("tar -xzf " + imagePath + " -C " + cfg.new_root + " --strip-components=1").c_str());
+    if (!cfg.image.empty()) {
+        std::string imagePath = "./images/" + cfg.image + ".tar.gz";
+        std::system(("tar -xzf " + imagePath + " -C " + cfg.new_root + " --strip-components=1").c_str());
+    }
 
     for (const auto& mntPoint: cfg.mntPoints) {
         auto src = mntPoint.substr(0, mntPoint.find(':'));
@@ -163,11 +165,11 @@ void Container::run() {
             std::cerr << std::endl;
             return;
         }
-
-        clear_filesystem();
     } else {
+        procPid = pid;
         int status;
         waitpid(pid, &status, 0);
+        clear_filesystem();
     }
 }
 

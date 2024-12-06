@@ -47,7 +47,13 @@ public:
 
         // parse new_root
         new_root = pt.get<std::string>("new_root");
-        image = pt.get<std::string>("image");
+
+        auto image_res = pt.get_optional<std::string>("image");
+        if (image_res) {
+            image = image_res.value();
+        } else {
+            image = "";
+        }
 
         // parse memory limitations
         for (const auto& [argName, varRef]: optionalIntArguments) {
