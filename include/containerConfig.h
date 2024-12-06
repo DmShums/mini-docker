@@ -24,6 +24,7 @@ public:
     std::vector<std::string> copyPoints;
     std::string new_root;
     std::string hostname;
+    std::string image;
     int mem_hard_limit, mem_throttling_limit, swap_limit, pids_limit;
 
     ContainerConfig() = delete;
@@ -46,6 +47,7 @@ public:
 
         // parse new_root
         new_root = pt.get<std::string>("new_root");
+        image = pt.get<std::string>("image");
 
         // parse memory limitations
         for (const auto& [argName, varRef]: optionalIntArguments) {

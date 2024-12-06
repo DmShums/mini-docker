@@ -49,24 +49,9 @@ int Container::isolate_filesystem() {
         return 1;
     }
 
-    for (const auto& mntPoint: defaultMountPoints) {
-        auto src = mntPoint.substr(0, mntPoint.find(':'));
-        auto dst = mntPoint.substr(mntPoint.find(':') + 1);
+    std::string imagePath = "./images/" + cfg.image + ".tar.gz";
+    std::system(("tar -xzf " + imagePath + " -C " + cfg.new_root + " --strip-components=1").c_str());
 
-        if (!std::filesystem::exists(src) || !std::filesystem::is_directory(src)) {
-            std::cerr << "Source directory " << src << " does not exist or is not a directory" << std::endl;
-            return 1;
-        }
-
-        auto full_dst = new_root + dst;
-        std::filesystem::create_directories(full_dst);
-
-        if (mount(src.c_str(), full_dst.c_str(), "ext4", MS_BIND | MS_REC | MS_RDONLY, nullptr) == -1) {
-            std::cerr << "Failed to bind mount " << src << " to " << full_dst << ": " << strerror(errno) << std::endl;
-            return 1;
-        }
-    }
-    
     for (const auto& mntPoint: cfg.mntPoints) {
         auto src = mntPoint.substr(0, mntPoint.find(':'));
         auto dst = mntPoint.substr(mntPoint.find(':') + 1);
@@ -75,7 +60,7 @@ int Container::isolate_filesystem() {
         std::filesystem::create_directories(full_dst);
 
         if (mount(src.c_str(), full_dst.c_str(), "ext4", MS_BIND | MS_REC, nullptr) == -1) {
-            std::cerr << "Failed to bind mount " << src << " to " << full_dst << ": " << strerror(errno) << std::endl;
+            std::cout << "Failed to bind mount " << src << " to " << full_dst << ": " << strerror(errno) << std::endl;
             return 1;
         }
     }
@@ -194,15 +179,6 @@ void Container::clear_filesystem() {
     }
 
     for (const auto& mntPoint: cfg.mntPoints) {
-        auto dst = mntPoint.substr(mntPoint.find(':') + 1);
-        auto full_dst = cfg.new_root + dst;
-
-        if (umount2(full_dst.c_str(), MNT_DETACH) == -1) {
-            std::cerr << "Failed to unmount " << full_dst << ": " << strerror(errno) << std::endl;
-        }
-    }
-
-    for (const auto& mntPoint: defaultMountPoints) {
         auto dst = mntPoint.substr(mntPoint.find(':') + 1);
         auto full_dst = cfg.new_root + dst;
 

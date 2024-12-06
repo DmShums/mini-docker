@@ -23,10 +23,6 @@ private:
     void clear_filesystem();
     int isolate_namespaces();
 
-    std::vector<std::string> defaultMountPoints = {
-        "/lib:/lib",
-    };
-
 public:
     pid_t procPid;
 
