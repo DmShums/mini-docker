@@ -1,10 +1,10 @@
 // This is a personal academic project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-#include "../include/containerConfig.h"
-#include "../include/container.h"
-#include "../include/docker.h"
-#include "../include/client.h"
+#include "containerConfig.h"
+#include "container.h"
+#include "docker.h"
+#include "client.h"
 #include <iostream>
 #include <sstream>
 #include <iterator>
