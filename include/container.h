@@ -17,9 +17,10 @@ private:
     ContainerConfig cfg;
     CGroup cgroup;
 
-    int isolated_fs = 0;
+    int created_fs = false;
 
     int isolate_filesystem();
+    int prepare_filesystem();
     void clear_filesystem();
     int isolate_namespaces();
 

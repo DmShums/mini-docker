@@ -1,8 +1,0 @@
-{
-  "name" : "mini-docker-2",
-  "new_root" : "/home/yura/ucu/OS_OperationalSystems/mini-docker/tmp",
-  "args" : ["/bin/sh"],
-  "copy_points": [],
-  "mount_points" : [],
-  "image": "alpine"
-}

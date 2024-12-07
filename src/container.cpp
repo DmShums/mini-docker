@@ -22,32 +22,18 @@ Container::Container(const ContainerConfig& cfg): cfg(cfg), cgroup(cfg.name) {
     if (cfg.pids_limit != NOT_SET) {
         cgroup.setPidLimit(cfg.pids_limit);
     }
+
+    if (prepare_filesystem() != 0){
+        created_fs = false;
+        std::cerr << "Failed to create filesystem" << std::endl;
+    }
 }
 
-int Container::isolate_filesystem() {
-    isolated_fs = 1;
-    // Create a new mount namespace
-    if (unshare(CLONE_NEWNS) == -1) {
-        std::cerr << "Failed to create a new mount namespace" << std::endl;
-        return 1;
-    }
+int Container::prepare_filesystem() {
+    created_fs = true;
 
     const char* new_root = cfg.new_root.c_str();
-    auto put_old_str = cfg.new_root + "/old_root";
-    const char* put_old = put_old_str.c_str();
-
     std::filesystem::create_directories(new_root);
-    std::filesystem::create_directories(put_old);
-
-    if (mount(NULL, "/", NULL, MS_REC | MS_PRIVATE, NULL) == -1) {
-        std::cerr << "mount-MS_PRIVATE" << std::endl;
-        return 1;
-    }
-
-    if (mount(new_root, new_root, nullptr, MS_BIND | MS_REC, nullptr) == -1) {
-        std::cerr << "Failed to bind mount " << new_root << " to itself" << std::endl;
-        return 1;
-    }
 
     if (!cfg.image.empty()) {
         std::string imagePath = "./images/" + cfg.image + ".tar.gz";
@@ -76,6 +62,31 @@ int Container::isolate_filesystem() {
         std::filesystem::copy(src, full_dst, std::filesystem::copy_options::recursive);
     }
 
+    return 0;
+}
+
+int Container::isolate_filesystem() {
+    const char* new_root = cfg.new_root.c_str();
+    auto put_old_str = cfg.new_root + "/old_root";
+    const char* put_old = put_old_str.c_str();
+
+    std::filesystem::create_directories(put_old);
+
+    // Create a new mount namespace
+    if (unshare(CLONE_NEWNS) == -1) {
+        std::cerr << "Failed to create a new mount namespace" << std::endl;
+        return 1;
+    }
+
+    if (mount(NULL, "/", NULL, MS_REC | MS_PRIVATE, NULL) == -1) {
+        std::cerr << "mount-MS_PRIVATE" << std::endl;
+        return 1;
+    }
+
+    if (mount(new_root, new_root, nullptr, MS_BIND | MS_REC, nullptr) == -1) {
+        std::cerr << "Failed to bind mount " << new_root << " to itself" << std::endl;
+        return 1;
+    }
 
     if (syscall(SYS_pivot_root, new_root, put_old) == -1) {
         std::cout << "pivot_root " << new_root << " " << put_old << std::endl;
@@ -120,6 +131,15 @@ int Container::isolate_namespaces() {
 
 void Container::run() {
     pid_t pid = fork();
+
+    if (!created_fs){
+        std::cerr << "Filesystem was not created. Trying once more" << std::endl;
+
+        if(prepare_filesystem() != 0){
+            std::cerr << "Filesystem cannot be created: " << strerror(errno) << std::endl;
+            return;
+        }
+    }
 
     if (pid == -1) {
         std::cerr << "Failed to fork" << std::endl;
@@ -169,16 +189,17 @@ void Container::run() {
         procPid = pid;
         int status;
         waitpid(pid, &status, 0);
-        clear_filesystem();
     }
 }
 
 void Container::clear_filesystem() {
-    isolated_fs = 0;
+    created_fs = false;
 
-    if (umount2(cfg.new_root.c_str(), MNT_DETACH) == -1) {
-        std::cerr << "Failed to unmount " << cfg.new_root << ": " << strerror(errno) << std::endl;
-    }
+//    not sure if needed but throws error anyway >o<
+
+//    if (umount2(cfg.new_root.c_str(), MNT_DETACH) == -1) {
+//        std::cerr << "Failed to unmount " << cfg.new_root << ": " << strerror(errno) << std::endl;
+//    }
 
     for (const auto& mntPoint: cfg.mntPoints) {
         auto dst = mntPoint.substr(mntPoint.find(':') + 1);
@@ -197,7 +218,7 @@ void Container::clear_filesystem() {
 
 
 Container::~Container() {
-    if (isolated_fs) {
+    if (created_fs) {
         clear_filesystem();
     }
 }
