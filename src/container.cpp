@@ -195,7 +195,7 @@ void Container::run() {
 void Container::clear_filesystem() {
     created_fs = false;
 
-//    not sure if needed but throws error anyway >o<
+//    not sure if needed but throws error anyway, so commented >o<
 
 //    if (umount2(cfg.new_root.c_str(), MNT_DETACH) == -1) {
 //        std::cerr << "Failed to unmount " << cfg.new_root << ": " << strerror(errno) << std::endl;
