@@ -57,10 +57,10 @@ include(cmake/CompilerWarnings.cmake)
 #! Project main executable source compilation
 add_executable(${PROJECT_NAME}
 		src/main.cpp
-		src/cgroup.cpp src/namespaces.cpp
-		src/client.cpp src/container.cpp src/docker.cpp
+		src/cgroup.cpp
+        src/client.cpp src/container.cpp src/docker.cpp
 
-		include/cgroup.h include/namespaces.h
+		include/cgroup.h
 		include/client.h include/container.h include/docker.h
 		include/containerConfig.h
 )
