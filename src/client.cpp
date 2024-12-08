@@ -27,45 +27,45 @@ void Client::executeCommand(size_t argc, const std::vector<std::string>& argv) {
             docker.list();
         } else if (cmd == "run") {
             if (argc < 2) {
-                std::cerr << "Usage: run <index>" << std::endl;
+                std::cerr << "Usage: run <container_name>" << std::endl;
                 return;
             }
-            docker.run(std::stoul(argv[1]));
+            docker.run(argv[1]);
         } else if (cmd == "remove") {
             if (argc < 2) {
-                std::cerr << "Usage: remove <index>" << std::endl;
+                std::cerr << "Usage: remove <container_name>" << std::endl;
                 return;
             }
-            docker.remove(std::stoul(argv[1]));
+            docker.remove(argv[1]);
         } else if (cmd == "stop") {
             if (argc < 2) {
-                std::cerr << "Usage: stop <index>" << std::endl;
+                std::cerr << "Usage: stop <container_name>" << std::endl;
                 return;
             }
-            docker.stop(std::stoul(argv[1]));
+            docker.stop(argv[1]);
         } else if (cmd == "resume") {
             if (argc < 2) {
-                std::cerr << "Usage: resume <index>" << std::endl;
+                std::cerr << "Usage: resume <container_name>" << std::endl;
                 return;
             }
-            docker.resume(std::stoul(argv[1]));
+            docker.resume(argv[1]);
         } else if (cmd == "kill") {
             if (argc < 2) {
-                std::cerr << "Usage: kill <index>" << std::endl;
+                std::cerr << "Usage: kill <container_name>" << std::endl;
                 return;
             }
-            docker.kill(std::stoul(argv[1]));
+            docker.kill(argv[1]);
         } else if (cmd == "help") {
             std::cout << "Available commands:\n"
-                    << "  create <config_path>  - Create a new container\n"
-                    << "  list                  - List all containers\n"
-                    << "  run <index>           - Run a container\n"
-                    << "  stop <index>          - Stop a running container\n"
-                    << "  resume <index>        - Resume a stopped container\n"
-                    << "  remove <index>        - Remove a container\n"
-                    << "  kill <index>          - Forcefully kill a container\n"
-                    << "  help                  - Show this help message\n"
-                    << "  exit                  - Exit the client\n";
+                      << "  create <config_path>  - Create a new container\n"
+                      << "  list                  - List all containers\n"
+                      << "  run <container_name>  - Run a container\n"
+                      << "  stop <container_name> - Stop a running container\n"
+                      << "  resume <container_name> - Resume a stopped container\n"
+                      << "  remove <container_name> - Remove a container\n"
+                      << "  kill <container_name> - Forcefully kill a container\n"
+                      << "  help                  - Show this help message\n"
+                      << "  exit                  - Exit the client\n";
         } else {
             std::cerr << "Unknown command: " << cmd << std::endl;
             std::cerr << "Type 'help' for a list of available commands." << std::endl;

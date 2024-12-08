@@ -4,55 +4,62 @@
 
 #include "docker.h"
 
-bool Docker::checkIdx(size_t idx){
-    if (containers.size() <= idx){
-        std::cerr << "Failed to get container with " << idx << " largest is " << containers.size() - 1 << std::endl;
-        return false;
+void Docker::create(const ContainerConfig& cfg) {
+    if (!isNameUnique(cfg.name)) {
+        std::cerr << "Failed to create container. Name '" << cfg.name << "' is already in use." << std::endl;
+        return;
     }
-    return true;
-}
 
-void Docker::create(const ContainerConfig& cfg){
     containers.push_back(std::make_unique<Container>(cfg));
+    name_to_idx[cfg.name] = containers.size() - 1;
 }
 
-void Docker::remove(size_t idx){
-    if (!checkIdx(idx)) return;
+void Docker::remove(const std::string& name) {
+    if (!checkName(name)) return;
 
+    size_t idx = name_to_idx[name];
     containers.erase(containers.begin() + idx);
+    name_to_idx.erase(name);
+
+    // Update the indices in the map
+    for (auto& pair : name_to_idx) {
+        if (pair.second > idx) {
+            pair.second--;
+        }
+    }
 }
 
-void Docker::run(size_t idx){
-    if (!checkIdx(idx)) return;
+void Docker::run(const std::string& name) {
+    if (!checkName(name)) return;
 
-    containers[idx]->run();
+    containers[name_to_idx[name]]->run();
 }
 
-void Docker::kill(size_t idx){
-    if (!checkIdx(idx)) return;
+void Docker::kill(const std::string& name) {
+    if (!checkName(name)) return;
 
+    size_t idx = name_to_idx[name];
     ::kill(containers[idx]->procPid, SIGKILL);
     containers[idx]->procPid = PID_NOT_SET;
 }
 
-void Docker::stop(size_t idx){
-    if (!checkIdx(idx)) return;
+void Docker::stop(const std::string& name) {
+    if (!checkName(name)) return;
 
-    ::kill(containers[idx]->procPid, SIGSTOP);
-}
-void Docker::resume(size_t idx){
-    if (!checkIdx(idx)) return;
-
-    ::kill(containers[idx]->procPid, SIGCONT);
+    ::kill(containers[name_to_idx[name]]->procPid, SIGSTOP);
 }
 
-void Docker::list(){
-    for (size_t idx = 0; idx < containers.size(); idx++){
-        std::cout << "\tname:\t" << containers[idx]->getName() << std::endl
-            << "\tidx:\t" << idx << std::endl;
+void Docker::resume(const std::string& name) {
+    if (!checkName(name)) return;
+
+    ::kill(containers[name_to_idx[name]]->procPid, SIGCONT);
+}
+
+void Docker::list() {
+    for (const auto& pair : name_to_idx) {
+        size_t idx = pair.second;
+        std::cout << "\tname:\t" << pair.first << std::endl
+                  << "\tidx:\t" << idx << std::endl;
         std::cout << containers[idx]->info();
     }
 }
-
-//void Docker::listen(size_t idx);
-//void Docker::detach();
