@@ -80,7 +80,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE include)
 # target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
 # target_link_libraries(${PROJECT_NAME} PRIVATE Boost::property_tree)
 
-# target_link_libraries(${PROJECT_NAME} PRIVATE readline)
+target_link_libraries(${PROJECT_NAME} PRIVATE readline)
 
 ##########################################################
 # Fixed CMakeLists.txt part

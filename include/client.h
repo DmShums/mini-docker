@@ -8,6 +8,9 @@
 #include <iostream>
 #include <unordered_map>
 #include <sstream>
+#include <readline/readline.h>
+#include <readline/history.h>
+
 
 #include "docker.h"
 

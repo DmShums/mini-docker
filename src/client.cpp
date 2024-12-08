@@ -76,8 +76,19 @@ void Client::executeCommand(size_t argc, const std::vector<std::string>& argv) {
 }
 
 std::string Client::readCommand() {
-    std::cout << "mini-docker> ";
-    std::string line;
-    std::getline(std::cin, line);
+    char* input = readline("mini-docker> ");
+    
+    if (input == nullptr) {
+        return "";
+    }
+
+    if (*input != '\0') {
+        add_history(input);
+    }
+    
+    std::string line(input);
+    
+    free(input);
+    
     return line;
 }
