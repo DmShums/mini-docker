@@ -1,0 +1,8 @@
+{
+  "name": "ubuntu",
+  "new_root": "/home/shuma/Desktop/mini-docker/tests/tmp1",
+  "args": ["/bin/sh"],
+  "mount_points": [],
+  "copy_points": [],
+  "image": "jammy-base-arm64"
+}

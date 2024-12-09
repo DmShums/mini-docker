@@ -1,0 +1,8 @@
+{
+  "name": "slarm",
+  "new_root": "/home/shuma/Desktop/mini-docker/tests/tmp0",
+  "args": ["/bin/sh"],
+  "mount_points": [],
+  "copy_points": [],
+  "image": "slarm64-riscv64-current-riscv64-rootfs-20210314"
+}
