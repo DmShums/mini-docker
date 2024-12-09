@@ -47,8 +47,13 @@ int Container::prepare_filesystem() {
         auto full_dst = new_root + dst;
         std::filesystem::create_directories(full_dst);
 
-        if (mount(src.c_str(), full_dst.c_str(), "ext4", MS_BIND | MS_REC, nullptr) == -1) {
+        if (mount(src.c_str(), full_dst.c_str(), "ext4", MS_BIND | MS_REC , nullptr) == -1) {
             std::cout << "Failed to bind mount " << src << " to " << full_dst << ": " << strerror(errno) << std::endl;
+            return 1;
+        }
+
+        if (mount(src.c_str(), full_dst.c_str(), "ext4", MS_REMOUNT | MS_BIND | MS_RDONLY , nullptr) == -1) {
+            std::cout << "Failed to make rdonly " << src << " to " << full_dst << ": " << strerror(errno) << std::endl;
             return 1;
         }
     }
@@ -220,10 +225,10 @@ void Container::run(bool waitAttach) {
 
         args.push_back(nullptr);
 
-        if (chmod(args[0], 0777) == -1) {
-            std::cerr << "Failed to change permissions of args[0]: " << strerror(errno) << std::endl;
-            exit(EXIT_FAILURE);
-        }
+        // if (chmod(args[0], 0777) == -1) {
+        //     std::cerr << "Failed to change permissions of args[0]: " << strerror(errno) << std::endl;
+        //     exit(EXIT_FAILURE);
+        // }
 
         if (access(args[0], X_OK) != 0) {
             std::cerr << "No access to execute " << args[0] << ": " << strerror(errno) << std::endl;
@@ -266,9 +271,9 @@ void Container::clear_filesystem() {
 
         if (umount2(full_dst.c_str(), MNT_DETACH) == -1) {
             std::cerr << "Failed to unmount " << full_dst << ": " << strerror(errno) << std::endl;
+            return;
         }
-
-        return;
+        std::cout << "Unmounted: " << full_dst << std::endl;
     }
 
     // remove new_root
