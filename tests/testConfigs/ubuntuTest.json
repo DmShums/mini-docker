@@ -1,8 +1,8 @@
 {
   "name": "ubuntu",
-  "new_root": "/home/shuma/Desktop/mini-docker/tests/tmp1",
-  "args": ["/bin/sh"],
-  "mount_points": [],
+  "new_root": "/home/hellcaster/Desktop/mini-docker/tests/tmp1",
+  "args": ["/bin/python3", "/files/test.py"],
+  "mount_points": ["./binaries:/files"],
   "copy_points": [],
-  "image": "jammy-base-arm64"
+  "image": "ubuntu-python3"
 }
