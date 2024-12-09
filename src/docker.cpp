@@ -59,9 +59,9 @@ void Docker::list(){
 }
 
 void Docker::attach(size_t idx, bool sendMsg){
-    Container cnt = *containers[idx];
-
-    if (cnt.pipeFromProc == PIPE_NOT_SET || cnt.pipeToProc == PIPE_NOT_SET || cnt.procPid == PID_NOT_SET){
+    if (containers[idx]->pipeFromProc == PIPE_NOT_SET ||
+        containers[idx]->pipeToProc   == PIPE_NOT_SET ||
+        containers[idx]->procPid      == PID_NOT_SET){
         std::cerr << "Cannot attach to not running process" << std::endl;
         return;
     }
@@ -70,13 +70,13 @@ void Docker::attach(size_t idx, bool sendMsg){
     struct pollfd fds[2];
     fds[0].fd = STDIN_FILENO;
     fds[0].events = POLLIN;
-    fds[1].fd = cnt.pipeFromProc;
+    fds[1].fd = containers[idx]->pipeFromProc;
     fds[1].events = POLLIN;
 
     char buffer[BUF_SIZE];
 
     if (sendMsg) {
-        write(cnt.pipeToProc, ATTACHED_MSG, sizeof(ATTACHED_MSG));
+        write(containers[idx]->pipeToProc, ATTACHED_MSG, sizeof(ATTACHED_MSG));
     }
 
     // be transparent until "detach" appears in stdin message
@@ -95,7 +95,7 @@ void Docker::attach(size_t idx, bool sendMsg){
                 if (input.find("detach") != std::string::npos) {
                     break;
                 } else {
-                    write(cnt.pipeToProc, buffer, bytesRead);
+                    write(containers[idx]->pipeToProc, buffer, bytesRead);
                 }
             } else if (bytesRead == 0){
                 break;
@@ -105,7 +105,7 @@ void Docker::attach(size_t idx, bool sendMsg){
         }
 
         if (fds[1].revents & POLLIN) {
-            ssize_t bytesRead = read(cnt.pipeFromProc, buffer, BUF_SIZE - 1);
+            ssize_t bytesRead = read(containers[idx]->pipeFromProc, buffer, BUF_SIZE - 1);
             if (bytesRead > 0) {
                 buffer[bytesRead] = '\0';
                 std::cout << buffer;
