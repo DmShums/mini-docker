@@ -7,15 +7,15 @@
 #include <filesystem>
 
 Container::Container(const ContainerConfig& cfg): cfg(cfg), cgroup(cfg.name) {
-    if (cfg.mem_hard_limit) {
+    if (cfg.mem_hard_limit != NOT_SET) {
         cgroup.setHardMemoryLimit(std::to_string(cfg.mem_hard_limit) + "M");
     }
 
-    if (cfg.mem_throttling_limit) {
+    if (cfg.mem_throttling_limit != NOT_SET) {
         cgroup.setThrottlingMemoryLimit(std::to_string(cfg.mem_throttling_limit));
     }
 
-    if (cfg.swap_limit) {
+    if (cfg.swap_limit != NOT_SET) {
         cgroup.setSwapLimit(std::to_string(cfg.swap_limit) + "M");
     }
 
@@ -129,7 +129,56 @@ int Container::isolate_namespaces() {
     return 0;
 }
 
-void Container::run() {
+int Container::setUpChildIPC(int pipe_to_proc[2], int pipe_from_proc[2], bool waitAttach){
+    close(pipe_to_proc[WRITE]);
+    dup2(pipe_to_proc[READ], STDIN_FILENO);
+    close(pipe_to_proc[READ]);
+
+    close(pipe_from_proc[READ]);
+    dup2(pipe_from_proc[WRITE], STDOUT_FILENO);
+    dup2(pipe_from_proc[WRITE], STDERR_FILENO);
+    close(pipe_from_proc[WRITE]);
+
+
+    if (waitAttach) {
+        char buffer[sizeof(ATTACHED_MSG)];
+        size_t readBytes = 0;
+        while (readBytes < sizeof(ATTACHED_MSG)) {
+            ssize_t justRead = read(STDIN_FILENO, buffer + readBytes, sizeof(ATTACHED_MSG) - readBytes);
+            if (justRead == -1) {
+                if (errno == EINTR) {
+                    continue;
+                }
+                std::cerr << "Failed to get message from pipe: " << strerror(errno) << std::endl;
+                return 1;
+            }
+
+            if (justRead == 0) {
+                std::cerr << "Pipe was closed before receiving the message." << std::endl;
+                return 1;
+            }
+
+            readBytes += justRead;
+        }
+
+        if (std::strcmp(buffer, ATTACHED_MSG) != 0) {
+            std::cerr << "Got wrong message while expecting ATTACHED_MSG" << std::endl;
+            return 2;
+        }
+    }
+
+    return 0;
+}
+
+void Container::run(bool waitAttach) {
+    int pipe_to_proc[2];
+    int pipe_from_proc[2];
+
+    if (pipe(pipe_to_proc) == -1 || pipe(pipe_from_proc) == -1) {
+        std::cerr << "Failed to create pipe" << std::endl;
+        return;
+    }
+
     pid_t pid = fork();
 
     if (!created_fs){
@@ -149,13 +198,19 @@ void Container::run() {
     if (pid == 0) {
         if (isolate_namespaces() != 0) {
             std::cerr << "Failed to isolate namespaces" << std::endl;
-            return;
+            exit(EXIT_FAILURE);
         }
         
         if (isolate_filesystem() != 0) {
             std::cerr << "Failed to isolate filesystem" << std::endl;
             clear_filesystem();
-            return;
+            exit(EXIT_FAILURE);
+        }
+
+        int res = setUpChildIPC(pipe_to_proc, pipe_from_proc, waitAttach);
+        if (res == 1){
+            close(STDOUT_FILENO);
+            exit(EXIT_FAILURE);
         }
 
         std::vector<char*> args;
@@ -167,12 +222,12 @@ void Container::run() {
 
         if (chmod(args[0], 0777) == -1) {
             std::cerr << "Failed to change permissions of args[0]: " << strerror(errno) << std::endl;
-            return;
+            exit(EXIT_FAILURE);
         }
 
         if (access(args[0], X_OK) != 0) {
             std::cerr << "No access to execute " << args[0] << ": " << strerror(errno) << std::endl;
-            return;
+            exit(EXIT_FAILURE);
         }
 
         if (execv(args[0], args.data()) == -1) {
@@ -183,12 +238,16 @@ void Container::run() {
                 std::cerr << arg << " ";
             }
             std::cerr << std::endl;
-            return;
+            exit(EXIT_FAILURE);
         }
     } else {
         procPid = pid;
-        int status;
-        waitpid(pid, &status, 0);
+
+        close(pipe_to_proc[READ]); // close read to proc
+        pipeToProc = pipe_to_proc[WRITE];
+
+        close(pipe_from_proc[WRITE]); // close write from proc
+        pipeFromProc = pipe_from_proc[READ];
     }
 }
 
@@ -208,6 +267,8 @@ void Container::clear_filesystem() {
         if (umount2(full_dst.c_str(), MNT_DETACH) == -1) {
             std::cerr << "Failed to unmount " << full_dst << ": " << strerror(errno) << std::endl;
         }
+
+        return;
     }
 
     // remove new_root
@@ -218,6 +279,12 @@ void Container::clear_filesystem() {
 
 
 Container::~Container() {
+    close(pipeFromProc);
+    close(pipeToProc);
+
+    int status;
+    waitpid(procPid, &status, 0);
+
     if (created_fs) {
         clear_filesystem();
     }

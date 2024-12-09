@@ -13,6 +13,7 @@
 int main(int argc, char* argv[]) {
     Client client;
     std::string command;
+    std::cout << "started with: " << getpid() << std::endl;
 
     while (true) {
         command = client.readCommand();

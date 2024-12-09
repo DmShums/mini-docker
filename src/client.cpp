@@ -26,11 +26,14 @@ void Client::executeCommand(size_t argc, const std::vector<std::string>& argv) {
         } else if (cmd == "list") {
             docker.list();
         } else if (cmd == "run") {
-            if (argc < 2) {
-                std::cerr << "Usage: run <container_name>" << std::endl;
+            if ((argc != 2 && argc != 3) ||
+                (argc == 3 && argv[2] != "-a" && argv[2] != "--attach")) {
+
+                std::cerr << "Usage: run <container_name> [-a|--attach]" << std::endl;
                 return;
             }
-            docker.run(argv[1]);
+
+            docker.run(argv[1], argc == 3);
         } else if (cmd == "remove") {
             if (argc < 2) {
                 std::cerr << "Usage: remove <container_name>" << std::endl;
@@ -55,17 +58,23 @@ void Client::executeCommand(size_t argc, const std::vector<std::string>& argv) {
                 return;
             }
             docker.kill(argv[1]);
+        } else if (cmd == "attach"){
+            if (argc != 2){
+                std::cerr << "Usage: attach <container_name>" << std::endl;
+                return;
+            }
+            docker.attach(argv[1], false);
         } else if (cmd == "help") {
             std::cout << "Available commands:\n"
-                      << "  create <config_path>  - Create a new container\n"
-                      << "  list                  - List all containers\n"
-                      << "  run <container_name>  - Run a container\n"
-                      << "  stop <container_name> - Stop a running container\n"
-                      << "  resume <container_name> - Resume a stopped container\n"
-                      << "  remove <container_name> - Remove a container\n"
-                      << "  kill <container_name> - Forcefully kill a container\n"
-                      << "  help                  - Show this help message\n"
-                      << "  exit                  - Exit the client\n";
+                      << "  create <config_path>                    - Create a new container\n"
+                      << "  list                                    - List all containers\n"
+                      << "  run    <container_name> [-a|--attach]   - Run a container\n"
+                      << "  stop   <container_name>                 - Stop a running container\n"
+                      << "  resume <container_name>                 - Resume a stopped container\n"
+                      << "  remove <container_name>                 - Remove a container\n"
+                      << "  kill   <container_name>                 - Forcefully kill a container\n"
+                      << "  help                                    - Show this help message\n"
+                      << "  exit                                    - Exit the client\n";
         } else {
             std::cerr << "Unknown command: " << cmd << std::endl;
             std::cerr << "Type 'help' for a list of available commands." << std::endl;
@@ -77,7 +86,7 @@ void Client::executeCommand(size_t argc, const std::vector<std::string>& argv) {
 
 std::string Client::readCommand() {
     char* input = readline("mini-docker> ");
-    
+
     if (input == nullptr) {
         return "";
     }
@@ -85,10 +94,10 @@ std::string Client::readCommand() {
     if (*input != '\0') {
         add_history(input);
     }
-    
+
     std::string line(input);
-    
+
     free(input);
-    
+
     return line;
 }
