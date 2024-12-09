@@ -36,7 +36,7 @@ int Container::prepare_filesystem() {
     std::filesystem::create_directories(new_root);
 
     if (!cfg.image.empty()) {
-        std::string imagePath = "./images/" + cfg.image + ".tar.gz";
+        std::string imagePath = "../images/" + cfg.image + ".tar.gz";
         std::system(("tar -xzf " + imagePath + " -C " + cfg.new_root + " --strip-components=1").c_str());
     }
 
@@ -118,7 +118,7 @@ int Container::isolate_filesystem() {
 }
 
 int Container::isolate_namespaces() {
-    if (unshare( CLONE_NEWIPC | CLONE_NEWUTS | CLONE_NEWNET) == -1) {
+    if (unshare( CLONE_NEWIPC | CLONE_NEWUTS) == -1) {
         std::cerr << "Failed to unshare namespaces: " << strerror(errno) << std::endl;
         return -1;
     }
@@ -175,7 +175,68 @@ int Container::setUpChildIPC(int pipe_to_proc[2], int pipe_from_proc[2], bool wa
     return 0;
 }
 
+int setup_veth_pair() {
+    // Create veth pair (veth0 in parent, veth1 in child)
+
+    if (system( "ip link add " IFACE_PARENT " type veth peer name " IFACE_CHILD) == -1) {
+        std::cerr << "Failed to create veth pair" << std::endl;
+        return 1;
+    }
+    return 0;
+}
+
+int configure_parent_network() {
+    // Assign IP address to veth0 in the parent namespace
+    if (system("ip addr add " PARENT_ADDR "/24 dev " IFACE_PARENT) == -1) {
+        std::cerr << "Failed to assign IP to parent " IFACE_PARENT << std::endl;
+        return 1;
+    }
+    if (system("ip link set " IFACE_PARENT " up") == -1) {
+        std::cerr << "Failed to bring up veth0" << std::endl;
+        return 1;
+    }
+    return 0;
+}
+
+int configure_child_network() {
+    // Inside child process, configure veth1
+    if (system("ip link set " IFACE_CHILD " up") == -1) {
+        std::cerr << "Failed to bring up " IFACE_CHILD << std::endl;
+        return 1;
+    }
+
+    // Assign IP address to veth1
+    if (system("ip addr add " CHILD_ADDR "/24 dev " IFACE_CHILD) == -1) {
+        std::cerr << "Failed to assign IP to child " IFACE_CHILD << std::endl;
+        return 1;
+    }
+
+    // Set default gateway (optional, depending on your setup)
+    if (system("ip route add default via " PARENT_ADDR) == -1) {
+        std::cerr << "Failed to set default route in child" << std::endl;
+        return 1;
+    }
+    return 0;
+}
+
+int Container::create_network_ns() {
+    if (system( ("ip link add " + cfg.name).c_str()) == -1) {
+        std::cerr << "Failed to isolane network" << std::endl;
+        return 1;
+    }
+    created_ns = true;
+
+    if (system(("ip link set " IFACE_CHILD " netns " + cfg.name).c_str()) == -1) {
+        std::cerr << "Failed to move " IFACE_CHILD " to ns" << std::endl;
+        return 1;
+    }
+    return 0;
+}
+
 void Container::run(bool waitAttach) {
+    if (setup_veth_pair() != 0) return;
+    if (configure_parent_network() != 0) return;
+
     int pipe_to_proc[2];
     int pipe_from_proc[2];
 
@@ -184,6 +245,7 @@ void Container::run(bool waitAttach) {
         return;
     }
 
+    std::cout << system("ip link show") << std::endl;
     pid_t pid = fork();
 
     if (!created_fs){
@@ -201,6 +263,10 @@ void Container::run(bool waitAttach) {
     }
 
     if (pid == 0) {
+        // if (isolane_network() != 0) exit(EXIT_FAILURE);
+
+        if (configure_child_network() != 0) exit(EXIT_FAILURE);
+
         if (isolate_namespaces() != 0) {
             std::cerr << "Failed to isolate namespaces" << std::endl;
             exit(EXIT_FAILURE);
@@ -292,5 +358,11 @@ Container::~Container() {
 
     if (created_fs) {
         clear_filesystem();
+    }
+
+    if (created_ns) {
+        if (system(("ip netns delete " + cfg.name).c_str()) == -1) {
+            std::cerr << "Failed to delete " << cfg.name << " namespace" << std::endl;
+        }
     }
 }
