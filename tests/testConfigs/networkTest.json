@@ -1,0 +1,8 @@
+{
+    "name": "network",
+    "new_root": "/home/hellcaster/Desktop/mini-docker/tests/tmp2",
+    "args": ["/bin/sh"],
+    "mount_points": ["/bin:/bin", "/lib:/lib"],
+    "copy_points": [],
+    "isolate_network": true
+}

@@ -10,6 +10,13 @@
 #include <vector>
 #include <string>
 
+#include <filesystem>
+#include <net/if.h>
+#include <sys/ioctl.h>
+#include <linux/if.h>
+#include <linux/if_tun.h>
+#include <cstring>
+
 #define PID_NOT_SET (-1)
 #define PIPE_NOT_SET (-1)
 
@@ -29,7 +36,12 @@ private:
     int prepare_filesystem();
     void clear_filesystem();
     int isolate_namespaces();
+    int isolate_network();
+    
     int setUpChildIPC(int pipe_to_proc[2], int pipe_from_proc[2], bool waitAttach);
+
+    std::string veth_host;
+    std::string veth_container;
 
 public:
     pid_t procPid;

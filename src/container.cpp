@@ -4,9 +4,11 @@
 
 #include "container.h"
 
-#include <filesystem>
+Container::Container(const ContainerConfig& cfg): 
+    cfg(cfg), cgroup(cfg.name),
+    veth_host(cfg.name.substr(0, 9) + "_host"),
+    veth_container(cfg.name.substr(0, 9) + "_cont") {
 
-Container::Container(const ContainerConfig& cfg): cfg(cfg), cgroup(cfg.name) {
     if (cfg.mem_hard_limit != NOT_SET) {
         cgroup.setHardMemoryLimit(std::to_string(cfg.mem_hard_limit) + "M");
     }
@@ -28,6 +30,45 @@ Container::Container(const ContainerConfig& cfg): cfg(cfg), cgroup(cfg.name) {
         std::cerr << "Failed to create filesystem" << std::endl;
     }
 }
+
+int Container::isolate_network() {
+    // Create a new network namespace
+    if (unshare(CLONE_NEWNET) == -1) {
+        std::cerr << "Failed to unshare network namespace: " << strerror(errno) << std::endl;
+        return -1;
+    }
+
+    // Create the veth pair
+    std::string cmd = "ip link add " + veth_host + " type veth peer name " + veth_container;
+    if (std::system(cmd.c_str()) != 0) {
+        std::cerr << "Failed to create veth pair" << std::endl;
+        return -1;
+    }
+
+    // Move the container's veth end to the new network namespace
+    cmd = "ip link set " + veth_container + " netns " + std::to_string(getpid());
+    if (std::system(cmd.c_str()) != 0) {
+        std::cerr << "Failed to move veth to container's namespace" << std::endl;
+        return -1;
+    }
+
+    // Set up the host side of the veth
+    cmd = "ip link set " + veth_host + " up";
+    if (std::system(cmd.c_str()) != 0) {
+        std::cerr << "Failed to bring up host veth interface" << std::endl;
+        return -1;
+    }
+
+    // Inside the container: bring up the interface and assign an IP address
+    cmd = "ip link set lo up && ip link set " + veth_container + " up && ip addr add 192.168.1.2/24 dev " + veth_container;
+    if (std::system(cmd.c_str()) != 0) {
+        std::cerr << "Failed to configure container's network interface" << std::endl;
+        return -1;
+    }
+
+    return 0;
+}
+
 
 int Container::prepare_filesystem() {
     created_fs = true;
@@ -118,7 +159,7 @@ int Container::isolate_filesystem() {
 }
 
 int Container::isolate_namespaces() {
-    if (unshare( CLONE_NEWIPC | CLONE_NEWUTS | CLONE_NEWNET) == -1) {
+    if (unshare( CLONE_NEWIPC | CLONE_NEWUTS) == -1) {
         std::cerr << "Failed to unshare namespaces: " << strerror(errno) << std::endl;
         return -1;
     }
@@ -186,10 +227,10 @@ void Container::run(bool waitAttach) {
 
     pid_t pid = fork();
 
-    if (!created_fs){
+    if (!created_fs) {
         std::cerr << "Filesystem was not created. Trying once more" << std::endl;
 
-        if(prepare_filesystem() != 0){
+        if (prepare_filesystem() != 0) {
             std::cerr << "Filesystem cannot be created: " << strerror(errno) << std::endl;
             return;
         }
@@ -205,7 +246,14 @@ void Container::run(bool waitAttach) {
             std::cerr << "Failed to isolate namespaces" << std::endl;
             exit(EXIT_FAILURE);
         }
-        
+
+        if (cfg.isolate_network) {
+            if (isolate_network() != 0) {
+                std::cerr << "Failed to isolate network" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+
         if (isolate_filesystem() != 0) {
             std::cerr << "Failed to isolate filesystem" << std::endl;
             clear_filesystem();
@@ -230,10 +278,10 @@ void Container::run(bool waitAttach) {
         //     exit(EXIT_FAILURE);
         // }
 
-        if (access(args[0], X_OK) != 0) {
-            std::cerr << "No access to execute " << args[0] << ": " << strerror(errno) << std::endl;
-            exit(EXIT_FAILURE);
-        }
+        // if (access(args[0], X_OK) != 0) {
+        //     std::cerr << "No access to execute " << args[0] << ": " << strerror(errno) << std::endl;
+        //     exit(EXIT_FAILURE);
+        // }
 
         if (execv(args[0], args.data()) == -1) {
             std::cerr << "Failed to execute " << args[0] << ": " << strerror(errno) << std::endl;
@@ -273,6 +321,7 @@ void Container::clear_filesystem() {
             std::cerr << "Failed to unmount " << full_dst << ": " << strerror(errno) << std::endl;
             return;
         }
+        
         std::cout << "Unmounted: " << full_dst << std::endl;
     }
 
@@ -292,5 +341,13 @@ Container::~Container() {
 
     if (created_fs) {
         clear_filesystem();
+    }
+
+    if (cfg.isolate_network) {
+        // Remove the veth pair
+        std::string cmd = "ip link delete " + veth_host;
+        if (std::system(cmd.c_str()) != 0) {
+            std::cerr << "Failed to clean up veth pair" << std::endl;
+        }
     }
 }

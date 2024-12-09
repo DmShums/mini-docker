@@ -487,3 +487,7 @@ tmp*/
 .vscode/
 binaroies/
 data/cfg*.json
+
+# all images that do not end with .tar.gz
+images/*
+!images/*.tar.gz

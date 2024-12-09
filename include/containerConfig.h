@@ -25,6 +25,9 @@ public:
     std::string new_root;
     std::string hostname;
     std::string image;
+
+    bool isolate_network = false;
+
     int mem_hard_limit, mem_throttling_limit, swap_limit, pids_limit;
 
     ContainerConfig() = delete;
@@ -44,6 +47,8 @@ public:
         } else {
             name = argv[0];
         }
+
+        isolate_network = pt.get_optional<bool>("isolate_network").value_or(false);
 
         // parse new_root
         new_root = pt.get<std::string>("new_root");
