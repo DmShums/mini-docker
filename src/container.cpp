@@ -218,7 +218,7 @@ void Container::run(bool waitAttach) {
             std::cerr << "Failed to isolate namespaces" << std::endl;
             exit(EXIT_FAILURE);
         }
-        
+
         if (isolate_filesystem() != 0) {
             std::cerr << "Failed to isolate filesystem" << std::endl;
             clear_filesystem();

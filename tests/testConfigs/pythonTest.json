@@ -1,0 +1,9 @@
+{
+  "name": "ubuntuPython",
+  "new_root": "/home/hellcaster/Desktop/mini-docker/tests/tmp1",
+  "args": ["/bin/bash"],
+  "mount_points": ["./binaries:/files"],
+  "rdonly_points" : [],
+  "copy_points": [],
+  "image": "ubuntu-python3"
+}
