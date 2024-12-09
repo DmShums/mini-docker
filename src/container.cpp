@@ -118,7 +118,7 @@ int Container::isolate_filesystem() {
 }
 
 int Container::isolate_namespaces() {
-    if (unshare(CLONE_NEWPID | CLONE_NEWIPC | CLONE_NEWUTS | CLONE_NEWNET) == -1) {
+    if (unshare( CLONE_NEWIPC | CLONE_NEWUTS | CLONE_NEWNET) == -1) {
         std::cerr << "Failed to unshare namespaces: " << strerror(errno) << std::endl;
         return -1;
     }
