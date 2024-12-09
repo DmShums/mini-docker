@@ -7,15 +7,15 @@
 #include <filesystem>
 
 Container::Container(const ContainerConfig& cfg): cfg(cfg), cgroup(cfg.name) {
-    if (cfg.mem_hard_limit) {
+    if (cfg.mem_hard_limit != NOT_SET) {
         cgroup.setHardMemoryLimit(std::to_string(cfg.mem_hard_limit) + "M");
     }
 
-    if (cfg.mem_throttling_limit) {
+    if (cfg.mem_throttling_limit != NOT_SET) {
         cgroup.setThrottlingMemoryLimit(std::to_string(cfg.mem_throttling_limit));
     }
 
-    if (cfg.swap_limit) {
+    if (cfg.swap_limit != NOT_SET) {
         cgroup.setSwapLimit(std::to_string(cfg.swap_limit) + "M");
     }
 
@@ -198,19 +198,19 @@ void Container::run(bool waitAttach) {
     if (pid == 0) {
         if (isolate_namespaces() != 0) {
             std::cerr << "Failed to isolate namespaces" << std::endl;
-            return;
+            exit(EXIT_FAILURE);
         }
         
         if (isolate_filesystem() != 0) {
             std::cerr << "Failed to isolate filesystem" << std::endl;
             clear_filesystem();
-            return;
+            exit(EXIT_FAILURE);
         }
 
         int res = setUpChildIPC(pipe_to_proc, pipe_from_proc, waitAttach);
         if (res == 1){
             close(STDOUT_FILENO);
-            return;
+            exit(EXIT_FAILURE);
         }
 
         std::vector<char*> args;
@@ -222,12 +222,12 @@ void Container::run(bool waitAttach) {
 
         if (chmod(args[0], 0777) == -1) {
             std::cerr << "Failed to change permissions of args[0]: " << strerror(errno) << std::endl;
-            return;
+            exit(EXIT_FAILURE);
         }
 
         if (access(args[0], X_OK) != 0) {
             std::cerr << "No access to execute " << args[0] << ": " << strerror(errno) << std::endl;
-            return;
+            exit(EXIT_FAILURE);
         }
 
         if (execv(args[0], args.data()) == -1) {
@@ -238,7 +238,7 @@ void Container::run(bool waitAttach) {
                 std::cerr << arg << " ";
             }
             std::cerr << std::endl;
-            return;
+            exit(EXIT_FAILURE);
         }
     } else {
         procPid = pid;

@@ -112,10 +112,12 @@ void Docker::attach(size_t idx, bool sendMsg){
                 std::cout.flush();
             } else if (bytesRead == 0) {
                 // pipe closed because the proc ended;
-                std::cerr << "Pipe to the process has been closed." << std::endl;
+                std::cerr << "Pipe from the process has been closed." << std::endl;
+                containers[idx]->pipeFromProc = PIPE_NOT_SET;
+                containers[idx]->pipeToProc = PIPE_NOT_SET;
                 break;
             } else {
-                perror("read");
+                std::cerr << "Failed to read from process pipe: " << strerror(errno) << std::endl;
             }
         }
 
