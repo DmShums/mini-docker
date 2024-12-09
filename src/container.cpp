@@ -129,7 +129,56 @@ int Container::isolate_namespaces() {
     return 0;
 }
 
-void Container::run() {
+int Container::setUpChildIPC(int pipe_to_proc[2], int pipe_from_proc[2], bool waitAttach){
+    close(pipe_to_proc[WRITE]);
+    dup2(pipe_to_proc[READ], STDIN_FILENO);
+    close(pipe_to_proc[READ]);
+
+    close(pipe_from_proc[READ]);
+    dup2(pipe_from_proc[WRITE], STDOUT_FILENO);
+    dup2(pipe_from_proc[WRITE], STDERR_FILENO);
+    close(pipe_from_proc[WRITE]);
+
+
+    if (waitAttach) {
+        char buffer[sizeof(ATTACHED_MSG)];
+        size_t readBytes = 0;
+        while (readBytes < sizeof(ATTACHED_MSG)) {
+            ssize_t justRead = read(STDIN_FILENO, buffer + readBytes, sizeof(ATTACHED_MSG) - readBytes);
+            if (justRead == -1) {
+                if (errno == EINTR) {
+                    continue;
+                }
+                std::cerr << "Failed to get message from pipe: " << strerror(errno) << std::endl;
+                return 1;
+            }
+
+            if (justRead == 0) {
+                std::cerr << "Pipe was closed before receiving the message." << std::endl;
+                return 1;
+            }
+
+            readBytes += justRead;
+        }
+
+        if (std::strcmp(buffer, ATTACHED_MSG) != 0) {
+            std::cerr << "Got wrong message while expecting ATTACHED_MSG" << std::endl;
+            return 2;
+        }
+    }
+
+    return 0;
+}
+
+void Container::run(bool waitAttach) {
+    int pipe_to_proc[2];
+    int pipe_from_proc[2];
+
+    if (pipe(pipe_to_proc) == -1 || pipe(pipe_from_proc) == -1) {
+        std::cerr << "Failed to create pipe" << std::endl;
+        return;
+    }
+
     pid_t pid = fork();
 
     if (!created_fs){
@@ -155,6 +204,12 @@ void Container::run() {
         if (isolate_filesystem() != 0) {
             std::cerr << "Failed to isolate filesystem" << std::endl;
             clear_filesystem();
+            return;
+        }
+
+        int res = setUpChildIPC(pipe_to_proc, pipe_from_proc, waitAttach);
+        if (res == 1){
+            close(STDOUT_FILENO);
             return;
         }
 
@@ -187,8 +242,12 @@ void Container::run() {
         }
     } else {
         procPid = pid;
-        int status;
-        waitpid(pid, &status, 0);
+
+        close(pipe_to_proc[READ]); // close read to proc
+        pipeToProc = pipe_to_proc[WRITE];
+
+        close(pipe_from_proc[WRITE]); // close write from proc
+        pipeFromProc = pipe_from_proc[READ];
     }
 }
 
@@ -208,6 +267,8 @@ void Container::clear_filesystem() {
         if (umount2(full_dst.c_str(), MNT_DETACH) == -1) {
             std::cerr << "Failed to unmount " << full_dst << ": " << strerror(errno) << std::endl;
         }
+
+        return;
     }
 
     // remove new_root
@@ -218,6 +279,12 @@ void Container::clear_filesystem() {
 
 
 Container::~Container() {
+    close(pipeFromProc);
+    close(pipeToProc);
+
+    int status;
+    waitpid(procPid, &status, 0);
+
     if (created_fs) {
         clear_filesystem();
     }
