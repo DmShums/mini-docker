@@ -132,13 +132,11 @@ void Docker::attach(const std::string& name, bool sendMsg){
                 std::cerr << "Failed to read from process pipe: " << strerror(errno) << std::endl;
             }
         }
-
         if (fds[1].revents & POLLHUP) {
             // The pipeFromProc file descriptor has been closed by the remote end
             std::cerr << "Pipe to the process has been closed." << std::endl;
             break;
         }
-
         if (fds[1].revents & POLLERR) {
             // An error occurred on the file descriptor
             std::cerr << "An error occurred on the pipe to the process." << std::endl;

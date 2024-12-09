@@ -22,6 +22,7 @@ public:
     std::vector<std::string> argv;
     std::vector<std::string> mntPoints;
     std::vector<std::string> copyPoints;
+    std::vector<std::string> rdonlyPoints;
     std::string new_root;
     std::string hostname;
     std::string image;
@@ -64,6 +65,11 @@ public:
         // parse mount points
         for (const auto &item: pt.get_child("mount_points")) {
             mntPoints.push_back(item.second.data());
+        }
+
+        // parse readonly mount points
+        for (const auto &item: pt.get_child("rdonly_points")) {
+            rdonlyPoints.push_back(item.second.data());
         }
 
         // parse copy points

@@ -47,6 +47,19 @@ int Container::prepare_filesystem() {
         auto full_dst = new_root + dst;
         std::filesystem::create_directories(full_dst);
 
+        if (mount(src.c_str(), full_dst.c_str(), "ext4", MS_REMOUNT | MS_BIND | MS_RDONLY , nullptr) == -1) {
+            std::cout << "Failed to make rdonly " << src << " to " << full_dst << ": " << strerror(errno) << std::endl;
+            return 1;
+        }
+    }
+
+    for (const auto& rdonlyPoint: cfg.rdonlyPoints) {
+        auto src = rdonlyPoint.substr(0, rdonlyPoint.find(':'));
+        auto dst = rdonlyPoint.substr(rdonlyPoint.find(':') + 1);
+
+        auto full_dst = new_root + dst;
+        std::filesystem::create_directories(full_dst);
+
         if (mount(src.c_str(), full_dst.c_str(), "ext4", MS_BIND | MS_REC , nullptr) == -1) {
             std::cout << "Failed to bind mount " << src << " to " << full_dst << ": " << strerror(errno) << std::endl;
             return 1;
@@ -267,6 +280,17 @@ void Container::clear_filesystem() {
 
     for (const auto& mntPoint: cfg.mntPoints) {
         auto dst = mntPoint.substr(mntPoint.find(':') + 1);
+        auto full_dst = cfg.new_root + dst;
+
+        if (umount2(full_dst.c_str(), MNT_DETACH) == -1) {
+            std::cerr << "Failed to unmount " << full_dst << ": " << strerror(errno) << std::endl;
+            return;
+        }
+        std::cout << "Unmounted: " << full_dst << std::endl;
+    }
+
+    for (const auto& rdonlyPoint: cfg.rdonlyPoints) {
+        auto dst = rdonlyPoint.substr(rdonlyPoint.find(':') + 1);
         auto full_dst = cfg.new_root + dst;
 
         if (umount2(full_dst.c_str(), MNT_DETACH) == -1) {
