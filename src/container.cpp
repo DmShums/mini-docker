@@ -47,8 +47,8 @@ int Container::prepare_filesystem() {
         auto full_dst = new_root + dst;
         std::filesystem::create_directories(full_dst);
 
-        if (mount(src.c_str(), full_dst.c_str(), "ext4", MS_REMOUNT | MS_BIND | MS_RDONLY , nullptr) == -1) {
-            std::cout << "Failed to make rdonly " << src << " to " << full_dst << ": " << strerror(errno) << std::endl;
+        if (mount(src.c_str(), full_dst.c_str(), "ext4", MS_BIND | MS_REC , nullptr) == -1) {
+            std::cout << "Failed to bind mount " << src << " to " << full_dst << ": " << strerror(errno) << std::endl;
             return 1;
         }
     }
